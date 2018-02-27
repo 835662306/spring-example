@@ -58,7 +58,7 @@ public class SeleniumDemo01 {
         product1.click();
 
         //*[@id="side-tools-bar"]/div/div[1]/div[3]/div/a[1]
-        WebElement product3 = webDriverWait.until(webDriver -> webDriver.findElement(By.xpath("//*[@id=\"side-tools-bar\"]/div/div[1]/div[3]/div/a[1]")));
+        WebElement product3 = driver.findElement(By.xpath("//*[@id=\"side-tools-bar\"]/div/div[1]/div[3]/div/a[1]"));
         product3.click();
 
         WebElement loginName = driver.findElement(By.className("ruc-input-login-name"));
