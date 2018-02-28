@@ -1,7 +1,7 @@
 package com.example.SeleniumDemo;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 
-
 /**
  * @Company
  * @Discription
@@ -23,19 +22,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class SeleniumDemo01 {
     private WebDriver driver = null;
-    @BeforeAll
+    @Before
     public void before() throws Exception{
 
-        System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY, "F:\\chromedriver.exe");
-        //System.setProperty(FirefoxDriver.SystemProperty.BROWSER_BINARY, "F:\\Firefox\\firefox.exe");
-        //System.setProperty("webdriver.chrome.driver", "C:\\Users\\sssssa\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe");
+//        System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY, "F:\\geckodriver.exe");
+//        System.setProperty(FirefoxDriver.SystemProperty.BROWSER_BINARY, "F:\\Firefox\\firefox.exe");
+//        driver = new FirefoxDriver();
 
+        System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY, "F:\\chromedriver.exe");
         driver = new ChromeDriver();
-        /*/
-        System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY, "C:\\Users\\chromedriver_win32\\chromedriver.exe");
-//        System.setProperty(ChromeDriver.SystemProperty.BROWSER_BINARY, "D:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe");
-        driver = new ChromeDriver();
-        /**/
         //最大化
         driver.manage().window().maximize();
     }

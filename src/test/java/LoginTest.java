@@ -1,0 +1,58 @@
+import com.example.action.AsserAction;
+import com.example.action.ElementAction;
+import com.example.action.LoginAction;
+import com.example.utils.ExcelReadUtil;
+import com.example.utils.TestBaseCase;
+import com.example.utils.XmlReadUtil;
+import org.dom4j.DocumentException;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+
+/**
+ * @Company
+ * @Discription
+ * @Author guoxiaojing
+ * @CreateDate 2018/2/28 12:30
+ * @Version 1.0
+ */
+public class LoginTest extends TestBaseCase{
+    ElementAction action=new ElementAction();
+    @Test(description="登录成功测试")
+    @Parameters({"BaseUrl"})//读取testng.xml参数
+    public void login(String BaseUrl) throws IOException
+    {
+        //调用登录方法，输入正确的用户名和密码
+        LoginAction loginAction=new LoginAction(BaseUrl,"guoxiaojing","123456");
+        action.sleep(2);
+        //设置检查点
+        AsserAction.VerityTextPresentPrecision("jd_8456195","输入正确的用户名和密码，验证是否成功进入主页");
+        //设置用例断言，判断用例是否失败
+        AsserAction.VerityError();
+    }
+    //数据驱动案例--start
+    @DataProvider(name="longinData")
+    public Object[][] loginData()
+    {
+        //读取登录用例测试数据
+        String filePath="src/main/resources/data/loginData.xls";
+        //读取第一个sheet，第2行到第5行-第2到第4列之间的数据
+        return ExcelReadUtil.case_data_excel(0, 1, 4, 1, 3,filePath);
+    }
+    @Test(description="登录失败用例",dataProvider = "longinData")
+    public void loginFail (String userName,String password,String message) throws IOException, DocumentException {
+        //代替testng参数化的方法
+        String BaseUrl= XmlReadUtil.getTestngParametersValue("testng.xml","BaseUrl");
+        //调用登录方法
+        LoginAction loginAction=new LoginAction(BaseUrl+"/new/login.aspx",userName,password);
+        action.sleep(1);
+        //设置检查点
+        AsserAction.VerityTextPresent(message,"验证是否出现预期的错误提示信息:"+message);
+        //设置断言
+        AsserAction.VerityError();
+    }
+    //数据驱动案例--end
+
+}
