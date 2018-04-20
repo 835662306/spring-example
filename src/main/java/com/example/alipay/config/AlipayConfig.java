@@ -21,7 +21,7 @@ public class AlipayConfig {
 	static {
 		try {
 			//play框架下要用这种方式加载
-			props.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("/property/apliPay.properties"));
+			props.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("/apliPay.properties"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

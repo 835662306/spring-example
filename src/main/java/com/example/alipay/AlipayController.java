@@ -1,18 +1,27 @@
 package com.example.alipay;
 
 import com.alibaba.fastjson.JSON;
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.AlipayClient;
+import com.alipay.api.DefaultAlipayClient;
+import com.alipay.api.request.AlipayDataDataserviceBillDownloadurlQueryRequest;
+import com.alipay.api.response.AlipayDataDataserviceBillDownloadurlQueryResponse;
 import com.example.alipay.config.AlipayConfig;
 import com.example.alipay.util.AlipayNotify;
 import com.example.alipay.util.AlipaySubmit;
 import com.example.bean.User;
 import com.example.controller.WxPayController;
 import com.example.utils.ActionResult;
+import com.example.utils.DownLoadFile;
 import com.example.utils.MemberBenefitCode;
+import com.example.utils.ZipUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -248,13 +257,57 @@ public class AlipayController {
     }
 
     /**
-     * 对账单
+     * 获取对账单下载地址
+     * 一般写在任务中
+     * @param date
      * @return
+     * @throws AlipayApiException
      */
-    @RequestMapping("/checkingBill.do")
-    public String checkingBill(ModelMap map){
-        map.put("currDay", DateFormatUtils.format(new Date(),"yyyy-MM-dd"));
-        return "sysManage/rechargeBill/checkingBill";
+    public static String getBillDownloadurlUrl(Date date){
+        Assert.notNull(date);
+
+        String billDownloadUrl=null;
+        try {
+            //*/
+            AlipayClient alipayClient = new DefaultAlipayClient("https://openapi.alipay.com/gateway.do",
+                    "2017020605539373",
+                    "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCQE2KFpoAgLo4mbmAu8BficEeAzIyZNxJyiZx5/ESCyFIe6gx8cRHDu8bXUMxqv6lwmRV3hicD+HDFlUURGosqQkoA+RiZpA3x2ZCyuv5H9A/F+RBqok9dzrPjoxyZXO+q4j9wtb1KmGYWhv+ZkZWQIjItwsCy8DN9xzF1BbVCAB7Ra3mWebFtNryWUkedJiwW0551qgNVTSD/tV2spCGcfyOp8IPs1prAP6huYU8ayj9jlGeBSkM/uM322v4tDsEQ04VjqVFvCQ5wsnZ7H+/gFtNBnGfkk6dpjaAm59VLT6cNE+vdxt5Zuet0iLJ0oovj9ul/hSF+Kq4XQIMkpiUpAgMBAAECggEAXBIXPuOlM2us6cBVdQl3qfwopZWSMANypYFtXsMooQ8U866MJiY3vQbNziFTUNCEnnElt8kiO7ZTkuCOT5zP3ESaeD63Ss/9HVX001MOVrsQLWq54/svjvoeGVXOW+95NZH6CrQJcJctfi3tP506n+5KdNXlQTShIzrdTzRDnhXxL5NiFjDbhpgkpY526EHlpEMu89SdUUKX7bFXcqLKHV8pzSnuXtMeP2b+vqmFYG0xVAUY/R3v6e8QKZXgVW8Aazw6MKLVvWmPeqduoSNe4kbhUFnYBYZoGDwh6LbxwJ6Xw7SgEz9sd02Ev++rY/OPnlIEy5mdhuwaKzes/JKuAQKBgQDR0jdST/sJuWpQYZQc2UwQakzSaPPSKADEUeoCwqCaXURtDHTQ1Ti5oaAxdaBY0E99+yIdZbZXZz4UR3iJXcxoVKtE3xY2qXe8xRw/DTI7Yz1XGQU0MqWfZazD+GY5Rp9Pmv4GJTlRmri7fOo4IMr/OtPMmR46GWEP5L+ihBHsaQKBgQCvyO1GNrAhwU8uV7ltTtvc7wUfvJEFTtHx14RbX2j8bgmg4g41TB1Osj1bd5/Wf/X+BNC1yQQWJTK/17Ppp8Uem/btXQz5dPDxzLL0vnlETMtIK3scyf4JS3xOwaFcf9FtL6oDFh7zcFFabaymnxTtoxs1aeeutWuq2rvyrRZawQKBgQCD+m2P2f02/ajwzKAEkW41+Rc/VoLfUwhAdKH0gIXS8w2iZi5oWWYn5ZFE6w8kLkuCG+A2i47pZWh4Cwi3pwd3LKLaXFS1p11IoNeGlX9eOasQyQ0r6xugqqzES8/JATIeOYjFRs7KFL9UN1uAWKg3aMJmtH194A7cl28vA1He2QKBgGua/dR7abpgEU53GOVW3rQSBPr2fXfYViBLI5SjhSrxWSeI+dWacF5aMcEqK0gtMLJ81B5TnRLJVpWlP1cLAlnIc5G94lFaSpxaCDpV1vn+YHofU8+9vqqF8ORtF4/+Fn9WLCaThgLTgJlwhb3BqBgIPoGmANMr72q5V1AosISBAoGACjY3T5+2W/8uZUMuTGPZH11N+4PofeDBTrKiq9TEcAYAaiMhrdtN5RVZeur0X1BOwJRGMF/+igJURVgCovtvI8QSK/DcrtnDCitb9qaFe4dbWLjL2zJA5mNUXF2gfEyiQgTzeiD4CzmHNdNhyGIFP0W+oyrqSK//GdsvUBcVNl8=",
+                    "json","GBK",
+                    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwZn2LO+2Ub+aZzwUPbi+MXYWfS3gD39ItvSqQmhBKrTrzXZq0N2EYzgMW3LFnuhInU5JKluUwltVHIlwFhawsT6EjPXXfuVQcdZgfz4DcaXXm/XWjvoQjcExyyuPvlbJxnokLrka+r5tUIYFsbJMfejU/7xEgdn/IKTWpZQe4C5itcruXqD08Wlfy91/AJInMKpNSASdjX2317TFoor2vwA606In+0W+GtN6uARONzbe/8Lj+Dgs9Wq8TaoZi2Ra5xHaaQCKU9gle79+2aC49ZD4ksIxoPpFyX65m959cZaI7Tqk89gQbW++l2hcL6/tmj8Gv+71RL5EI7I5v3ot1QIDAQAB",
+                    "RSA2");
+            AlipayDataDataserviceBillDownloadurlQueryRequest request = new AlipayDataDataserviceBillDownloadurlQueryRequest();
+            request.setBizContent("{\"bill_type\":\"trade\",\"bill_date\":\""+ DateFormatUtils.format(date,"yyyy-MM-dd")+"\"}");
+            AlipayDataDataserviceBillDownloadurlQueryResponse response = alipayClient.execute(request);
+            if(response.isSuccess()){
+                log.info("获取对账单下载地址调用成功");
+                billDownloadUrl = response.getBillDownloadUrl();
+            } else {
+                log.info("获取对账单下载地址调用失败");
+            }
+        } catch (AlipayApiException e) {
+            log.error("获取对账单下载地址调用失败", e);
+        }
+        return billDownloadUrl;
+    }
+
+    private static String zipPath="download/bill_zip";
+    private static String unZipPath="download/bills";
+
+    private static String alipay_account="20885219024064740156";
+    public void getBill() {
+        //下载前一天的对账单
+        Date date = DateUtils.addDays(new Date(), -1);
+        String billDownloadurlUrl = getBillDownloadurlUrl(date);
+        String dateStr= DateFormatUtils.format(date,"yyyyMMdd");
+        if(StringUtils.isNotBlank(billDownloadurlUrl)){
+            String path = Thread.currentThread().getContextClassLoader().getResource("/").getPath().replace("classes/","");
+            String localFilePath = path + zipPath+"/"+alipay_account+"_" + dateStr + ".csv.zip";
+            DownLoadFile.downloadFile(billDownloadurlUrl, localFilePath);
+
+            ZipUtil.unzip(localFilePath, path + unZipPath);
+
+//            alipayBillService.importBillFromDownloadCsvFile( path+unZipPath+"/"+alipay_account+"_"+dateStr+"_业务明细.csv");
+        }
     }
 
 }
